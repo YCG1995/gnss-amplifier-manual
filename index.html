@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>GNSS 放大器模块 — 产品说明书</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  :root { color-scheme: dark; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0a0e1a; color: #e2e8f0; line-height: 1.7;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 18px 80px; }
+
+  .lang-bar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .lang-btn {
+    min-height: 40px; padding: 8px 18px; background: transparent;
+    border: 1px solid #3b82f6; border-radius: 20px; color: #60a5fa;
+    font-size: 14px; font-family: inherit; cursor: pointer; font-weight: 600;
+  }
+  .lang-btn:active { background: #1e3a5f; }
+
+  .hero { text-align: center; padding: 28px 16px 32px; border-bottom: 1px solid #1e293b; margin-bottom: 32px; }
+  .hero-badge { display: inline-block; padding: 4px 14px; border: 1px solid #3b82f6; border-radius: 20px; color: #60a5fa; font-size: 13px; margin-bottom: 16px; letter-spacing: 1px; }
+  .hero h1 { font-size: 30px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .hero p { color: #94a3b8; font-size: 15px; max-width: 540px; margin: 0 auto; }
+
+  .section { margin-bottom: 44px; scroll-margin-top: 20px; }
+  .section-title { font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 16px; padding-left: 12px; border-left: 3px solid #3b82f6; }
+
+  .spec-table { width: 100%; border-collapse: collapse; background: #111827; border-radius: 8px; overflow: hidden; }
+  .spec-table th, .spec-table td { padding: 11px 14px; text-align: left; border-bottom: 1px solid #1e293b; }
+  .spec-table th { background: #1e293b; color: #94a3b8; font-weight: 500; font-size: 13px; }
+  .spec-table td { color: #e2e8f0; font-size: 14px; }
+  .spec-table tr:last-child th, .spec-table tr:last-child td { border-bottom: none; }
+  .freq-table th, .freq-table td { padding: 9px 10px; white-space: nowrap; }
+  .freq-table td:last-child { font-size: 13px; }
+
+  .diagram-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 20px 12px; overflow-x: auto; }
+  .diagram-box svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram-caption { text-align: center; color: #94a3b8; font-size: 13px; margin-top: 10px; }
+
+  .calc-box { background: #111827; border-radius: 10px; padding: 20px; }
+  .calc-row { margin-bottom: 16px; }
+  .calc-row > label { display: block; color: #94a3b8; font-size: 13px; margin-bottom: 6px; }
+  .calc-box input[type=number] { width: 100%; padding: 12px 14px; background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 6px; font-size: 16px; font-family: inherit; }
+  .calc-box input:focus { outline: none; border-color: #3b82f6; }
+
+  .selector { position: relative; }
+  .sel-trigger {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; min-height: 48px; padding: 12px 14px;
+    background: #1e293b; color: #e2e8f0; border: 1px solid #334155;
+    border-radius: 6px; font-size: 15px; font-family: inherit; cursor: pointer; text-align: left;
+  }
+  .sel-caret { color: #60a5fa; flex-shrink: 0; margin-left: 10px; transition: transform .2s; }
+  .selector.open .sel-caret { transform: rotate(180deg); }
+  .sel-panel {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 60;
+    background: #1e293b; border: 1px solid #3b82f6; border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.6); overflow: hidden;
+  }
+  .selector.open .sel-panel { display: block; }
+  .sel-search {
+    width: 100%; padding: 12px 14px; background: #0f172a; color: #e2e8f0;
+    border: none; border-bottom: 1px solid #334155;
+    font-size: 16px; font-family: inherit;
+  }
+  .sel-search:focus { outline: none; }
+  .sel-list { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  body.sel-lock { overflow: hidden; }
+  .sel-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    padding: 12px 14px; cursor: pointer; min-height: 46px;
+  }
+  .sel-item:active { background: #3b82f6; }
+  .sel-item.sel-active { background: #1e3a5f; }
+  .si-name { color: #e2e8f0; font-weight: 600; font-size: 14px; }
+  .si-od { color: #94a3b8; font-size: 12px; margin-left: 6px; }
+  .si-loss { color: #60a5fa; font-size: 13px; white-space: nowrap; }
+  .sel-empty { padding: 18px; color: #64748b; font-size: 13px; text-align: center; }
+
+  .calc-result { background: #0f172a; border-radius: 8px; padding: 14px 16px; }
+  .calc-result-line { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 14px; }
+  .calc-result-line span:first-child { color: #94a3b8; }
+  .calc-result-line span:last-child { color: #e2e8f0; font-weight: 600; text-align: right; }
+  .calc-verdict { margin-top: 10px; padding: 11px 14px; border-radius: 6px; font-size: 13px; text-align: center; }
+  .verdict-ok { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+  .verdict-bad { background: #2e0a0a; color: #f87171; border: 1px solid #991b1b; }
+
+  .qa-box { background: #111827; border-radius: 8px; padding: 18px 20px; margin-bottom: 12px; }
+  .qa-q { color: #60a5fa; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .qa-a { color: #94a3b8; font-size: 14px; }
+  .qa-a b { color: #e2e8f0; }
+
+  .ts-box { background: #111827; border-radius: 8px; padding: 16px 18px; margin-bottom: 12px; }
+  .ts-sym { color: #f87171; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .ts-line { display: flex; gap: 10px; padding: 4px 0; font-size: 13px; }
+  .ts-k { flex-shrink: 0; color: #60a5fa; font-weight: 600; min-width: 64px; }
+  .ts-v { color: #94a3b8; min-width: 0; }
+
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step { display: flex; gap: 12px; background: #111827; padding: 14px 16px; border-radius: 8px; }
+  .step-num { flex-shrink: 0; width: 28px; height: 28px; background: #3b82f6; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }
+  .step-content h4 { color: #fff; margin-bottom: 4px; font-size: 14px; }
+  .step-content p { color: #94a3b8; font-size: 13px; }
+
+  .warn-list { display: flex; flex-direction: column; gap: 10px; }
+  .warn-item { display: flex; gap: 12px; padding: 12px 14px; background: #1e1b0e; border: 1px solid #854d0e; border-radius: 8px; }
+  .warn-icon { flex-shrink: 0; width: 18px; height: 18px; color: #fbbf24; }
+  .warn-item p { color: #fde68a; font-size: 13px; }
+
+  .footer { text-align: center; padding-top: 32px; border-top: 1px solid #1e293b; color: #475569; font-size: 12px; }
+
+  .fab-toc {
+    position: fixed; right: 18px; bottom: 22px; z-index: 80;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #3b82f6; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(59,130,246,.5);
+  }
+  .fab-toc:active { transform: scale(.94); }
+  .fab-toc svg { width: 24px; height: 24px; }
+
+  .toc-mask { display: none; position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.55); }
+  .toc-mask.show { display: block; }
+  .toc-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 91;
+    width: min(78vw, 320px); background: #111827;
+    transform: translateX(100%); transition: transform .25s ease;
+    display: flex; flex-direction: column;
+  }
+  .toc-panel.show { transform: translateX(0); }
+  .toc-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #1e293b; }
+  .toc-panel-head span { color: #fff; font-size: 16px; font-weight: 600; }
+  .toc-close { width: 40px; height: 40px; border: none; background: transparent; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .toc-panel ul { list-style: none; overflow-y: auto; }
+  .toc-panel a {
+    display: flex; align-items: center; min-height: 50px; padding: 0 20px;
+    color: #cbd5e1; text-decoration: none; font-size: 15px;
+    border-bottom: 1px solid #1e293b;
+  }
+  .toc-panel a:active { background: #1e293b; color: #60a5f6; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="lang-bar">
+    <button class="lang-btn" id="langBtn" type="button">EN</button>
+  </div>
+
+  <div class="hero">
+    <div class="hero-badge">GNSS AMPLIFIER MODULE</div>
+    <h1 data-i18n="heroTitle">GNSS 放大器模块</h1>
+    <p data-i18n="heroSub">全频段卫星导航信号放大，同轴偏置馈电供电</p>
+  </div>
+
+  <!-- 功能参数 -->
+  <div class="section" id="spec">
+    <h2 class="section-title" data-i18n="tSpec">功能参数</h2>
+    <table class="spec-table">
+      <tr><th style="width:35%" data-i18n="kFreq">工作频段</th><td>1.1 GHz ~ 1.7 GHz</td></tr>
+      <tr><th data-i18n="kGain">增益</th><td data-i18n="vGain">20 dB（典型值）</td></tr>
+      <tr><th data-i18n="kNF">噪声系数（NF）</th><td data-i18n="vNF">0.9 dB（典型值）</td></tr>
+      <tr><th data-i18n="kVSWR">输入 / 输出驻波比</th><td data-i18n="vVSWR">1.8 : 1（典型值）</td></tr>
+      <tr><th data-i18n="kFeed">供电方式</th><td data-i18n="vFeed">同轴偏置馈电，从任一 SMA 口馈入</td></tr>
+      <tr><th data-i18n="kVolt">供电电压</th><td>3.3 V ~ 6 V DC</td></tr>
+      <tr><th data-i18n="kCurr">馈电电流</th><td data-i18n="vCurr">120 mA（最大）</td></tr>
+      <tr><th data-i18n="kConn">接口形式</th><td data-i18n="vConn">SMA-K × 2（外螺内孔）</td></tr>
+      <tr><th data-i18n="kDim">模块尺寸</th><td data-i18n="vDim">约 40 × 140 mm</td></tr>
+      <tr><th data-i18n="kTemp">工作温度</th><td>-10 °C ~ +50 °C</td></tr>
+    </table>
+  </div>
+
+  <!-- 支持频点 -->
+  <div class="section" id="freq">
+    <h2 class="section-title" data-i18n="tFreq">支持频点</h2>
+    <table class="spec-table freq-table">
+      <tr><th data-i18n="hSys">卫星系统</th><th data-i18n="hBand">频段</th><th data-i18n="hCF">中心频率</th></tr>
+      <tr><td rowspan="3">GPS</td><td>L1</td><td>1575.42 MHz</td></tr>
+      <tr><td>L2</td><td>1227.60 MHz</td></tr>
+      <tr><td>L5</td><td>1176.45 MHz</td></tr>
+      <tr><td rowspan="5" data-i18n="beiDou">北斗</td><td>B1I</td><td>1561.098 MHz</td></tr>
+      <tr><td>B1C</td><td>1575.42 MHz</td></tr>
+      <tr><td>B2a</td><td>1176.45 MHz</td></tr>
+      <tr><td>B2b</td><td>1207.14 MHz</td></tr>
+      <tr><td>B3I</td><td>1268.52 MHz</td></tr>
+      <tr><td rowspan="2">GLONASS</td><td>G1</td><td data-i18n="approx1602">约 1602 MHz</td></tr>
+      <tr><td>G2</td><td data-i18n="approx1246">约 1246 MHz</td></tr>
+      <tr><td rowspan="3">Galileo</td><td>E1</td><td>1575.42 MHz</td></tr>
+      <tr><td>E5a</td><td>1176.45 MHz</td></tr>
+      <tr><td>E5b</td><td>1207.14 MHz</td></tr>
+      <tr><td>QZSS</td><td>L1</td><td>1575.42 MHz</td></tr>
+      <tr><td>SBAS</td><td>L1</td><td>1575.42 MHz</td></tr>
+    </table>
+  </div>
+
+  <!-- 连接示意图 -->
+  <div class="section" id="diagram">
+    <h2 class="section-title" data-i18n="tDiag">连接示意图</h2>
+    <div class="diagram-box">
+      <svg width="700" height="200" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="62" width="90" height="56" rx="6" fill="#1e3a5f" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="65" y="87" text-anchor="middle" fill="#93c5fd" font-size="13" font-weight="600" data-i18n="sAnt">GNSS天线</text>
+        <text x="65" y="105" text-anchor="middle" fill="#cbd5e1" font-size="10" data-i18n="sNear">靠近放大器</text>
+        <line x1="110" y1="90" x2="150" y2="90" stroke="#60a5fa" stroke-width="2"/>
+        <rect x="150" y="66" width="60" height="48" rx="4" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="180" y="88" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">RF IN</text>
+        <text x="180" y="104" text-anchor="middle" fill="#cbd5e1" font-size="10">SMA</text>
+        <rect x="230" y="52" width="180" height="78" rx="8" fill="#1e293b" stroke="#60a5fa" stroke-width="2"/>
+        <text x="320" y="78" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="600" data-i18n="sAmp">GNSS放大器</text>
+        <text x="320" y="100" text-anchor="middle" fill="#93c5fd" font-size="11" data-i18n="sGain">增益 20 dB</text>
+        <text x="320" y="118" text-anchor="middle" fill="#93c5fd" font-size="11">NF 0.9 dB</text>
+        <rect x="430" y="66" width="60" height="48" rx="4" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="460" y="88" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">RF OUT</text>
+        <text x="460" y="104" text-anchor="middle" fill="#cbd5e1" font-size="10">SMA</text>
+        <line x1="490" y1="90" x2="540" y2="90" stroke="#60a5fa" stroke-width="2"/>
+        <rect x="540" y="62" width="130" height="56" rx="6" fill="#1e3a5f" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="605" y="87" text-anchor="middle" fill="#93c5fd" font-size="13" font-weight="600" data-i18n="sRecv">导航接收机</text>
+        <text x="605" y="105" text-anchor="middle" fill="#cbd5e1" font-size="10" data-i18n="sFeed">馈电端</text>
+        <line x1="605" y1="118" x2="605" y2="146" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="605" y="164" text-anchor="middle" fill="#fde68a" font-size="11">3.3~6V</text>
+      </svg>
+      <div class="diagram-caption" data-i18n="capDiag">靠近天线安装，任一口可馈电</div>
+    </div>
+  </div>
+
+  <!-- 级联 -->
+  <div class="section" id="cascade">
+    <h2 class="section-title" data-i18n="tCasc">级联使用</h2>
+    <div class="diagram-box">
+      <svg width="700" height="180" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg">
+       <g transform="translate(75,0)">
+        <rect x="10" y="55" width="70" height="50" rx="4" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="45" y="78" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600" data-i18n="cAnt">天线</text>
+        <text x="45" y="95" text-anchor="middle" fill="#cbd5e1" font-size="9">GNSS</text>
+        <line x1="80" y1="80" x2="120" y2="80" stroke="#60a5fa" stroke-width="2"/>
+        <rect x="120" y="55" width="120" height="50" rx="6" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="180" y="78" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600" data-i18n="cAmp1">放大器 1</text>
+        <text x="180" y="95" text-anchor="middle" fill="#93c5fd" font-size="10">+20 dB</text>
+        <line x1="240" y1="80" x2="280" y2="80" stroke="#60a5fa" stroke-width="2"/>
+        <rect x="280" y="55" width="120" height="50" rx="6" fill="#1e293b" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="340" y="78" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600" data-i18n="cAmp2">放大器 2</text>
+        <text x="340" y="95" text-anchor="middle" fill="#93c5fd" font-size="10">+20 dB</text>
+        <line x1="400" y1="80" x2="440" y2="80" stroke="#60a5fa" stroke-width="2"/>
+        <rect x="440" y="55" width="100" height="50" rx="4" fill="#1e3a5f" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="490" y="78" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600" data-i18n="cRecv">接收机</text>
+        <text x="490" y="95" text-anchor="middle" fill="#cbd5e1" font-size="9" data-i18n="cFeed">馈电端</text>
+        <line x1="490" y1="105" x2="490" y2="138" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="490" y="156" text-anchor="middle" fill="#fde68a" font-size="11">3.3~6V</text>
+        <text x="200" y="156" text-anchor="middle" fill="#cbd5e1" font-size="11" data-i18n="cTotal">总增益约 40 dB</text>
+       </g>
+      </svg>
+      <div class="diagram-caption" data-i18n="capCasc">两级串联，馈电同时供给两级</div>
+    </div>
+  </div>
+
+  <!-- 线缆损耗计算 -->
+  <div class="section" id="cable">
+    <h2 class="section-title" data-i18n="tCable">同轴线缆损耗计算</h2>
+    <div class="calc-box">
+      <div class="calc-row">
+        <label data-i18n="lCable">线缆型号（点击展开，可搜索）</label>
+        <div class="selector" id="selector">
+          <button type="button" class="sel-trigger" id="selTrigger">
+            <span id="triggerLabel">LMR-200</span>
+            <svg class="sel-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="sel-panel" id="selPanel">
+            <input type="search" class="sel-search" id="selSearch" autocomplete="off" data-i18n-ph="phSearch">
+            <div class="sel-list" id="selList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="calc-row">
+        <label for="cableLen" data-i18n="lLen">实际线缆长度（米）</label>
+        <input type="number" id="cableLen" min="0" step="1" inputmode="numeric" value="10">
+      </div>
+      <div class="calc-result">
+        <div class="calc-result-line"><span data-i18n="r20">20 dB 对应长度</span><span id="r20Len">—</span></div>
+        <div class="calc-result-line"><span data-i18n="rTotal">当前线缆总损耗</span><span id="rTotal">—</span></div>
+        <div class="calc-verdict" id="rVerdict"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 使用说明 -->
+  <div class="section" id="usage">
+    <h2 class="section-title" data-i18n="tUsage">使用说明</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><h4 data-i18n="u1t">连接天线</h4><p data-i18n="u1p">GNSS 天线同轴线缆接到 RF IN 端口，拧紧 SMA 接头。放大器尽量靠近天线安装。</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><h4 data-i18n="u2t">连接接收机</h4><p data-i18n="u2p">同轴线缆将 RF OUT 端口连接到导航接收机天线输入口。</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><h4 data-i18n="u3t">上电</h4><p data-i18n="u3p">由接收机或天线端任一同轴口馈入 3.3~6V 直流，电源指示灯亮表示工作正常。</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><h4 data-i18n="u4t">验证信号</h4><p data-i18n="u4p">打开接收机查看卫星载噪比，信号明显提升表示模块正常工作。</p></div></div>
+    </div>
+  </div>
+
+  <!-- 常见问题 -->
+  <div class="section" id="faq">
+    <h2 class="section-title" data-i18n="tFaq">常见问题</h2>
+    <div class="qa-box"><div class="qa-q" data-i18n="q1q">放大器能不能把很弱的信号“救”回来？</div><div class="qa-a" data-i18n-html="q1a"></div></div>
+    <div class="qa-box"><div class="qa-q" data-i18n="q2q">为什么放大器要尽量靠近天线安装？</div><div class="qa-a" data-i18n-html="q2a"></div></div>
+    <div class="qa-box"><div class="qa-q" data-i18n="q3q">装了放大器能搜到更多卫星吗？</div><div class="qa-a" data-i18n-html="q3a"></div></div>
+    <div class="qa-box"><div class="qa-q" data-i18n="q4q">信号强度怎么看，多少算正常？</div><div class="qa-a" data-i18n-html="q4a"></div></div>
+  </div>
+
+  <!-- 故障排查 -->
+  <div class="section" id="troubleshoot">
+    <h2 class="section-title" data-i18n="tTs">故障排查</h2>
+    <div class="ts-box">
+      <div class="ts-sym" data-i18n="ts1s">指示灯不亮，模块不工作</div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsCause">可能原因</span><span class="ts-v" data-i18n="ts1c">未馈电、电压不在 3.3~6V、接头松动或极性反接</span></div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsFix">解决办法</span><span class="ts-v" data-i18n="ts1f">确认接收机或电源已开启并输出 3.3~6V；拧紧 SMA；中心导体为正极、外壳为地，勿反接</span></div>
+    </div>
+    <div class="ts-box">
+      <div class="ts-sym" data-i18n="ts2s">接了放大器，信号没有明显提升</div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsCause">可能原因</span><span class="ts-v" data-i18n="ts2c">线缆本来就短、损耗小，可补偿空间有限；接头接触不良</span></div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsFix">解决办法</span><span class="ts-v" data-i18n="ts2f">短线缆提升本就不明显，属正常；重新拧紧接头；用损耗计算器确认线缆损耗</span></div>
+    </div>
+    <div class="ts-box">
+      <div class="ts-sym" data-i18n="ts3s">信号反而变差，或完全收不到星</div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsCause">可能原因</span><span class="ts-v" data-i18n="ts3c">SMA 未拧紧、线缆损坏、馈电异常，或靠近强发射源导致输入过强</span></div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsFix">解决办法</span><span class="ts-v" data-i18n="ts3f">检查全部接头、更换线缆确认；远离强发射源；确认输入信号不超过 -10 dBm</span></div>
+    </div>
+    <div class="ts-box">
+      <div class="ts-sym" data-i18n="ts4s">接收机报天线故障或触发短路保护</div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsCause">可能原因</span><span class="ts-v" data-i18n="ts4c">线缆短路，或馈电电流超过 120 mA</span></div>
+      <div class="ts-line"><span class="ts-k" data-i18n="tsFix">解决办法</span><span class="ts-v" data-i18n="ts4f">检查线缆和接头是否短路；确认总电流不超过 120 mA</span></div>
+    </div>
+  </div>
+
+  <!-- 注意事项 -->
+  <div class="section" id="notice">
+    <h2 class="section-title" data-i18n="tNotice">注意事项</h2>
+    <div class="warn-list">
+      <div class="warn-item"><svg class="warn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><p data-i18n="w1">馈电电压不得超过 6V，正负极反接会永久损坏模块。SMA 中心导体为正极，外壳为地。</p></div>
+      <div class="warn-item"><svg class="warn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><p data-i18n="w2">馈电总电流不得超过 120 mA，超过会损坏模块。</p></div>
+      <div class="warn-item"><svg class="warn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><p data-i18n="w3">输入射频信号功率不得超过 -10 dBm，强信号会损坏放大芯片。</p></div>
+      <div class="warn-item"><svg class="warn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><p data-i18n="w4">模块为静电敏感器件，操作时请佩戴防静电手环或先触摸接地金属释放静电。</p></div>
+      <div class="warn-item"><svg class="warn-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg><p data-i18n="w5">天线应安装在开阔无遮挡位置，放大器无法增强被遮挡而收不到的信号。</p></div>
+    </div>
+  </div>
+
+  <div class="footer" data-i18n="footer">GNSS 放大器模块 · 产品说明书</div>
+</div>
+
+<!-- 悬浮目录 -->
+<button class="fab-toc" id="fabToc" type="button" aria-label="目录">
+  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+</button>
+<div class="toc-mask" id="tocMask"></div>
+<aside class="toc-panel" id="tocPanel">
+  <div class="toc-panel-head">
+    <span data-i18n="tocTitle">目录</span>
+    <button class="toc-close" id="tocClose" type="button" aria-label="关闭">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+    </button>
+  </div>
+  <ul id="tocLinks">
+    <li><a href="#spec" data-i18n="tSpec">功能参数</a></li>
+    <li><a href="#freq" data-i18n="tFreq">支持频点</a></li>
+    <li><a href="#diagram" data-i18n="tDiag">连接示意图</a></li>
+    <li><a href="#cascade" data-i18n="tCasc">级联使用</a></li>
+    <li><a href="#cable" data-i18n="tCable">线缆损耗计算</a></li>
+    <li><a href="#usage" data-i18n="tUsage">使用说明</a></li>
+    <li><a href="#faq" data-i18n="tFaq">常见问题</a></li>
+    <li><a href="#troubleshoot" data-i18n="tTs">故障排查</a></li>
+    <li><a href="#notice" data-i18n="tNotice">注意事项</a></li>
+  </ul>
+</aside>
+
+<script>
+/* ===== 双语字典 ===== */
+var I18N = {
+  zh: {
+    docTitle:"GNSS 放大器模块 — 产品说明书",
+    heroTitle:"GNSS 放大器模块", heroSub:"全频段卫星导航信号放大，同轴偏置馈电供电",
+    tSpec:"功能参数", kFreq:"工作频段", kGain:"增益", kNF:"噪声系数（NF）", kVSWR:"输入 / 输出驻波比",
+    kFeed:"供电方式", kVolt:"供电电压", kCurr:"馈电电流", kConn:"接口形式", kDim:"模块尺寸", kTemp:"工作温度",
+    vGain:"20 dB（典型值）", vNF:"0.9 dB（典型值）", vVSWR:"1.8 : 1（典型值）",
+    vFeed:"同轴偏置馈电，从任一 SMA 口馈入", vCurr:"120 mA（最大）",
+    vConn:"SMA-K × 2（外螺内孔）", vDim:"约 40 × 140 mm",
+    tFreq:"支持频点", hSys:"卫星系统", hBand:"频段", hCF:"中心频率", beiDou:"北斗",
+    approx1602:"约 1602 MHz", approx1246:"约 1246 MHz",
+    tDiag:"连接示意图", sAnt:"GNSS天线", sNear:"靠近放大器", sAmp:"GNSS放大器",
+    sGain:"增益 20 dB", sRecv:"导航接收机", sFeed:"馈电端", capDiag:"靠近天线安装，任一口可馈电",
+    tCasc:"级联使用", cAnt:"天线", cAmp1:"放大器 1", cAmp2:"放大器 2", cRecv:"接收机",
+    cFeed:"馈电端", cTotal:"总增益约 40 dB", capCasc:"两级串联，馈电同时供给两级",
+    tCable:"同轴线缆损耗计算", lCable:"线缆型号（点击展开，可搜索）",
+    phSearch:"搜索线缆型号，如 RG、LMR、LDF", lLen:"实际线缆长度（米）",
+    rPerM:"每米损耗（L1 频段）", r20:"20 dB 对应长度", rTotal:"当前线缆总损耗", rMargin:"放大器补偿后余量",
+    empty:"未找到匹配的线缆", vOk:"可完全补偿",
+    vBad:"无法完全补偿，请换线或缩短",
+    tUsage:"使用说明", u1t:"连接天线", u1p:"GNSS 天线同轴线缆接到 RF IN 端口，拧紧 SMA 接头。放大器尽量靠近天线安装。",
+    u2t:"连接接收机", u2p:"同轴线缆将 RF OUT 端口连接到导航接收机天线输入口。",
+    u3t:"上电", u3p:"由接收机或天线端任一同轴口馈入 3.3~6V 直流，电源指示灯亮表示工作正常。",
+    u4t:"验证信号", u4p:"打开接收机查看卫星载噪比，信号明显提升表示模块正常工作。",
+    tFaq:"常见问题",
+    q1q:"放大器能不能把很弱的信号“救”回来？",
+    q1a:"不能。放大器在放大信号的同时，会把<b>噪声也一起放大</b>。如果天线收到的信号本身已经很弱、信噪比很差，放大后信号和噪声仍然是同样的比例，接收机依然无法分辨。放大器解决的是“信号在传输途中被线缆损耗”的问题，而不是“信号本身质量差”的问题。",
+    q2q:"为什么放大器要尽量靠近天线安装？",
+    q2a:"卫星信号被天线接收的那一刻功率最强，之后每经过一段同轴电缆都会产生损耗。把放大器放在<b>靠近天线的位置</b>，可以在信号还没被长电缆衰减之前先放大，再送往接收机，这样电缆损耗就不会把信号淹没。如果放大器放在接收机端，信号已经被电缆损耗得很弱，放大效果就大打折扣。",
+    q3q:"装了放大器能搜到更多卫星吗？",
+    q3a:"不能。能收到哪些卫星，取决于<b>天线的位置和朝向</b>。被建筑物、山体遮挡的卫星，信号根本到不了天线，放大器无法“无中生有”。放大器的作用是让<b>已经能收到的卫星信号更强</b>（载噪比更高、定位更稳定），而不是增加卫星数量。建议把天线放在靠窗、开阔、无遮挡的位置。",
+    q4q:"信号强度怎么看，多少算正常？",
+    q4a:"接收机软件里通常用 <b>载噪比（C/N0，单位 dBHz）</b>表示信号质量。一般来说，40 dBHz 以上属于良好，30~40 dBHz 可以正常定位，低于 30 dBHz 容易丢星。安装放大器后，可对比各卫星的载噪比是否有明显提升。",
+    tTs:"故障排查", tsCause:"可能原因", tsFix:"解决办法",
+    ts1s:"指示灯不亮，模块不工作",
+    ts1c:"未馈电、电压不在 3.3~6V、接头松动或极性反接",
+    ts1f:"确认接收机或电源已开启并输出 3.3~6V；拧紧 SMA；中心导体为正极、外壳为地，勿反接",
+    ts2s:"接了放大器，信号没有明显提升",
+    ts2c:"线缆本来就短、损耗小，可补偿空间有限；接头接触不良",
+    ts2f:"短线缆提升本就不明显，属正常；重新拧紧接头；用损耗计算器确认线缆损耗",
+    ts3s:"信号反而变差，或完全收不到星",
+    ts3c:"SMA 未拧紧、线缆损坏、馈电异常，或靠近强发射源导致输入过强",
+    ts3f:"检查全部接头、更换线缆确认；远离强发射源；确认输入信号不超过 -10 dBm",
+    ts4s:"接收机报天线故障或触发短路保护",
+    ts4c:"线缆短路，或馈电电流超过 120 mA",
+    ts4f:"检查线缆和接头是否短路；确认总电流不超过 120 mA",
+    tNotice:"注意事项",
+    w1:"馈电电压不得超过 6V，正负极反接会永久损坏模块。SMA 中心导体为正极，外壳为地。",
+    w2:"馈电总电流不得超过 120 mA，超过会损坏模块。",
+    w3:"输入射频信号功率不得超过 -10 dBm，强信号会损坏放大芯片。",
+    w4:"模块为静电敏感器件，操作时请佩戴防静电手环或先触摸接地金属释放静电。",
+    w5:"天线应安装在开阔无遮挡位置，放大器无法增强被遮挡而收不到的信号。",
+    footer:"GNSS 放大器模块 · 产品说明书", tocTitle:"目录"
+  },
+  en: {
+    docTitle:"GNSS Amplifier Module — Product Manual",
+    heroTitle:"GNSS Amplifier Module", heroSub:"Full-band GNSS signal amplification, coaxial bias feed powered",
+    tSpec:"Specifications", kFreq:"Frequency Range", kGain:"Gain", kNF:"Noise Figure (NF)", kVSWR:"Input/Output VSWR",
+    kFeed:"Power Supply", kVolt:"Supply Voltage", kCurr:"Feed Current", kConn:"Connector", kDim:"Dimensions", kTemp:"Operating Temperature",
+    vGain:"20 dB (typ.)", vNF:"0.9 dB (typ.)", vVSWR:"1.8 : 1 (typ.)",
+    vFeed:"Coaxial bias feed via either SMA port", vCurr:"120 mA (max)",
+    vConn:"SMA-K × 2 (female)", vDim:"approx. 40 × 140 mm",
+    tFreq:"Supported Frequencies", hSys:"System", hBand:"Band", hCF:"Center Frequency", beiDou:"BeiDou",
+    approx1602:"approx. 1602 MHz", approx1246:"approx. 1246 MHz",
+    tDiag:"Connection Diagram", sAnt:"GNSS Antenna", sNear:"Near amplifier", sAmp:"GNSS Amplifier",
+    sGain:"Gain 20 dB", sRecv:"Receiver", sFeed:"Feed", capDiag:"Mount near antenna; either port can feed",
+    tCasc:"Cascading", cAnt:"Antenna", cAmp1:"Amplifier 1", cAmp2:"Amplifier 2", cRecv:"Receiver",
+    cFeed:"Feed", cTotal:"Total gain approx. 40 dB", capCasc:"Two in series; feed powers both",
+    tCable:"Coaxial Cable Loss Calculator", lCable:"Cable type (tap to expand, searchable)",
+    phSearch:"Search cable, e.g. RG, LMR, LDF", lLen:"Cable length (m)",
+    rPerM:"Loss per meter (L1 band)", r20:"Length for 20 dB", rTotal:"Total cable loss", rMargin:"Margin after compensation",
+    empty:"No matching cable", vOk:"Fully compensated",
+    vBad:"Not fully compensated; use lower-loss or shorter cable",
+    tUsage:"Instructions", u1t:"Connect antenna", u1p:"Connect the GNSS antenna coax to RF IN and tighten the SMA. Mount the amplifier as close to the antenna as possible.",
+    u2t:"Connect receiver", u2p:"Connect RF OUT to the receiver's antenna input with a coax cable.",
+    u3t:"Power on", u3p:"Feed 3.3–6V DC from either coax port. The power LED indicates normal operation.",
+    u4t:"Verify", u4p:"Check the satellite C/N0 on the receiver. A clear increase means the module works.",
+    tFaq:"FAQ",
+    q1q:"Can the amplifier rescue a very weak signal?",
+    q1a:"No. While amplifying the signal, it also <b>amplifies the noise</b>. If the signal at the antenna is already weak with a poor signal-to-noise ratio, both are scaled by the same factor, so the receiver still cannot tell them apart. The amplifier addresses loss caused by the cable during transmission, not poor signal quality at the source.",
+    q2q:"Why should the amplifier be mounted close to the antenna?",
+    q2a:"A satellite signal is strongest the moment it is received, and every section of coax adds loss afterward. Placing the amplifier <b>close to the antenna</b> boosts the signal before the long cable attenuates it, so the cable loss does not bury the signal. If it sits at the receiver end, the signal has already been weakened and the benefit is much smaller.",
+    q3q:"Will the amplifier find more satellites?",
+    q3a:"No. Which satellites are received depends on the <b>antenna's position and orientation</b>. Satellites blocked by buildings or terrain never reach the antenna, and the amplifier cannot create them out of nothing. It makes the <b>satellites already received stronger</b> (higher C/N0, more stable positioning) rather than increasing their count. Place the antenna near a window in an open, unobstructed spot.",
+    q4q:"How do I read signal strength, and what is normal?",
+    q4a:"Receiver software usually shows signal quality as <b>C/N0 (carrier-to-noise density, in dBHz)</b>. Above 40 dBHz is generally good, 30–40 dBHz allows normal positioning, and below 30 dBHz easily loses satellites. After installing the amplifier, compare whether each satellite's C/N0 improves clearly.",
+    tTs:"Troubleshooting", tsCause:"Cause", tsFix:"Solution",
+    ts1s:"Power LED off, module not working",
+    ts1c:"No feed voltage, voltage outside 3.3–6V, loose connector, or reversed polarity",
+    ts1f:"Confirm the receiver/power is on and outputs 3.3–6V; tighten the SMA; center pin is positive, shell is ground—do not reverse",
+    ts2s:"No obvious improvement after installing the amplifier",
+    ts2c:"A short, low-loss cable leaves little to compensate; poor connector contact",
+    ts2f:"Little gain on a short cable is normal; reseat the connectors; use the loss calculator to check cable loss",
+    ts3s:"Signal gets worse, or satellites are lost entirely",
+    ts3c:"Loose SMA, damaged cable, abnormal feed, or a strong nearby transmitter overloading the input",
+    ts3f:"Check all connectors, swap the cable, move away from strong transmitters, keep input below -10 dBm",
+    ts4s:"Receiver reports an antenna fault or short-circuit protection",
+    ts4c:"Shorted cable, or feed current exceeding 120 mA",
+    ts4f:"Inspect the cable and connectors for shorts; keep total current below 120 mA",
+    tNotice:"Precautions",
+    w1:"Do not exceed 6V. Reversing polarity permanently damages the module. The SMA center pin is positive; the shell is ground.",
+    w2:"Total feed current must not exceed 120 mA.",
+    w3:"Input RF power must not exceed -10 dBm; strong signals damage the amplifier.",
+    w4:"This is an ESD-sensitive device. Use an anti-static wrist strap or touch grounded metal first.",
+    w5:"Mount the antenna in an open, unobstructed spot. The amplifier cannot enhance blocked signals.",
+    footer:"GNSS Amplifier Module · Product Manual", tocTitle:"Contents"
+  }
+};
+
+var CABLES = [
+  {name:"RG178",od:"1.8 mm",loss:1.51},{name:"RG174",od:"2.5 mm",loss:1.29},
+  {name:"RG316",od:"2.6 mm",loss:1.27},{name:"RG188",od:"2.7 mm",loss:1.18},
+  {name:"LMR-100A",od:"2.5 mm",loss:0.99},{name:"RG58",od:"5.0 mm",loss:0.86},
+  {name:"RG223",od:"5.4 mm",loss:0.72},{name:"RG142",od:"5.0 mm",loss:0.52},
+  {name:"RG400",od:"5.0 mm",loss:0.53},{name:"RG8X",od:"6.0 mm",loss:0.54},
+  {name:"LMR-195",od:"5.0 mm",loss:0.42},{name:"LMR-200",od:"6.0 mm",loss:0.42},
+  {name:"LMR-240",od:"6.1 mm",loss:0.33},{name:"RG214",od:"10.8 mm",loss:0.33},
+  {name:"RG213",od:"10.3 mm",loss:0.34},{name:"LMR-300",od:"7.6 mm",loss:0.25},
+  {name:"Belden 9913",od:"10.3 mm",loss:0.20},{name:"LMR-400",od:"10.3 mm",loss:0.17},
+  {name:"1/4 SuperFlex",od:"13.0 mm",loss:0.15},{name:"3/8 LDF",od:"11.0 mm",loss:0.15},
+  {name:"LMR-500",od:"12.7 mm",loss:0.14},{name:"LMR-600",od:"15.0 mm",loss:0.11},
+  {name:"1/2 LDF",od:"16.0 mm",loss:0.096},{name:"LMR-900",od:"22.0 mm",loss:0.073},
+  {name:"7/8 LDF",od:"22.0 mm",loss:0.054},{name:"LMR-1200",od:"30.0 mm",loss:0.055}
+];
+
+function fmt(n){ return (Math.round(n*100)/100).toString(); }
+
+/* ===== 语言切换 ===== */
+var lang = "zh";
+try { var saved = localStorage.getItem("gnssLang"); if (saved === "en" || saved === "zh") lang = saved; } catch(e){}
+var langBtn = document.getElementById("langBtn");
+
+function applyLang(){
+  var dict = I18N[lang];
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    el.textContent = dict[el.getAttribute("data-i18n")];
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach(function(el){
+    el.innerHTML = dict[el.getAttribute("data-i18n-html")];
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(function(el){
+    el.placeholder = dict[el.getAttribute("data-i18n-ph")];
+  });
+  document.title = dict.docTitle;
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  langBtn.textContent = lang === "zh" ? "EN" : "中文";
+  if (selector) renderList(selSearch.value);
+  update();
+}
+langBtn.addEventListener("click", function(){
+  lang = lang === "zh" ? "en" : "zh";
+  try { localStorage.setItem("gnssLang", lang); } catch(e){}
+  applyLang();
+});
+
+/* ===== 悬浮目录 ===== */
+var fabToc = document.getElementById("fabToc");
+var tocMask = document.getElementById("tocMask");
+var tocPanel = document.getElementById("tocPanel");
+function openToc(){ tocMask.classList.add("show"); tocPanel.classList.add("show"); }
+function closeToc(){ tocMask.classList.remove("show"); tocPanel.classList.remove("show"); }
+fabToc.addEventListener("click", openToc);
+tocMask.addEventListener("click", closeToc);
+document.getElementById("tocClose").addEventListener("click", closeToc);
+document.getElementById("tocLinks").addEventListener("click", function(e){
+  if (e.target.tagName === "A") closeToc();
+});
+
+/* ===== 线缆选择器 ===== */
+var selector = document.getElementById("selector");
+var selTrigger = document.getElementById("selTrigger");
+var triggerLabel = document.getElementById("triggerLabel");
+var selPanel = document.getElementById("selPanel");
+var selSearch = document.getElementById("selSearch");
+var selList = document.getElementById("selList");
+var lenEl = document.getElementById("cableLen");
+var selected = CABLES[11];
+
+function setSelOpen(open){
+  selector.classList.toggle("open", open);
+  document.body.classList.toggle("sel-lock", open);
+}
+
+function renderList(filter){
+  var f = (filter || "").trim().toLowerCase();
+  var matches = CABLES.filter(function(c){ return c.name.toLowerCase().indexOf(f) !== -1; });
+  selList.innerHTML = "";
+  if (matches.length === 0){
+    var d = document.createElement("div");
+    d.className = "sel-empty";
+    d.textContent = I18N[lang].empty;
+    selList.appendChild(d);
+    return;
+  }
+  matches.forEach(function(c){
+    var item = document.createElement("div");
+    item.className = "sel-item" + (c.name === selected.name ? " sel-active" : "");
+    item.innerHTML =
+      '<span><span class="si-name">'+c.name+'</span><span class="si-od">'+c.od+'</span></span>'+
+      '<span class="si-loss">'+fmt(c.loss)+' dB/m</span>';
+    item.addEventListener("click", function(){
+      selected = c;
+      triggerLabel.textContent = c.name;
+      setSelOpen(false);
+      selSearch.value = "";
+      update();
+    });
+    selList.appendChild(item);
+  });
+}
+
+selTrigger.addEventListener("click", function(e){
+  e.stopPropagation();
+  var willOpen = !selector.classList.contains("open");
+  setSelOpen(willOpen);
+  if (willOpen){ renderList(""); setTimeout(function(){ selSearch.focus(); }, 60); }
+});
+selPanel.addEventListener("click", function(e){ e.stopPropagation(); });
+selSearch.addEventListener("input", function(){ renderList(selSearch.value); });
+document.addEventListener("click", function(){ setSelOpen(false); });
+
+/* ===== 计算 ===== */
+function update(){
+  var dict = I18N[lang];
+  var perM = selected.loss;
+  var len = parseFloat(lenEl.value);
+  if (isNaN(len) || len < 0) len = 0;
+  var total = perM * len;
+
+  document.getElementById("r20Len").textContent = fmt(20/perM) + " m";
+  document.getElementById("rTotal").textContent = fmt(total) + " dB";
+
+  var verdict = document.getElementById("rVerdict");
+  verdict.className = "calc-verdict";
+  if (total <= 20){ verdict.classList.add("verdict-ok"); verdict.textContent = dict.vOk; }
+  else { verdict.classList.add("verdict-bad"); verdict.textContent = dict.vBad; }
+}
+
+triggerLabel.textContent = selected.name;
+lenEl.addEventListener("input", update);
+applyLang();
+</script>
+</body>
+</html>
